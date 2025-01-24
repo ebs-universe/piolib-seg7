@@ -5,6 +5,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <platform/debug.h>
 
 typedef uint8_t seg7_pos_spec_t;
 
@@ -66,10 +67,12 @@ typedef enum {
     SEG7_UNDER  = 0b00001000,
     SEG7_ABOVE  = 0b00000001,
     SEG7_DEGREE = 0b01100011,
-    SEG7_DOTS   = 0b10000000,  // only for 2nd digit
+    SEG7_DOTS   = 0b10000000,
     SEG7_CLEAR  = 0b00000000,
 } seg7_symbol_t;
 
 extern const seg7_symbol_t seg7_digits[0x10];
+
+uint8_t seg7_prep_display_buffer(int16_t number, seg7_pos_spec_t pos_spec, uint8_t * buffer, uint8_t buffer_len);
 
 #endif
