@@ -1,7 +1,7 @@
 {
     "name": "ebs-seg7",
     "version": "0.1.0",
-    "description": "7 segment LCD primitives use by EBS display drivers",
+    "description": "7 segment LCD primitives for use by EBS display drivers",
     "keywords": "ebs",
     "repository": {
         "type": "git",
