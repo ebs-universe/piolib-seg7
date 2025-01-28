@@ -1,6 +1,6 @@
 {
     "name": "ebs-seg7",
-    "version": "0.1.1",
+    "version": "0.2.0",
     "description": "7 segment LCD primitives for use by EBS display drivers",
     "keywords": "ebs",
     "repository": {
@@ -21,6 +21,10 @@
         {
             "owner": "chintal",
             "name": "ebs-platform"
+        },
+        {
+            "owner": "chintal",
+            "name": "ebs-printf"
         }
     ]
   }

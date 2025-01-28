@@ -6,21 +6,31 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <platform/debug.h>
+#include "config.h"
+
+#if SEG7_SUPPORT_PRINTF
+#include <printf/printf.h>
+#endif
 
 typedef uint8_t seg7_pos_spec_t;
 
-
-#define SEG7_POSSPEC_LEFTALIGN      (1U << 6)
-#define SEG7_POSSPEC_RIGHTALIGN     (0U)
-#define SEG7_POSSPEC_PUNCTUATE      (1U << 7)
-#define SEG7_POSSPEC_PARTIAL        (1U << 5)
-#define SEG7_POSSPEC_FULL           (0U)
-
-// ADDR is 
-//  - if punctuate, address for punctuation, from right end of unpadded number
-//  - if partial, start address if left aligned
-//  - if partial, end address for right aligned, 
-#define SEG7_POSSPEC_ADDR_MASK      0x0F
+/**
+ * POSSPEC for number:
+ *   punctuate | align | partial | - | 4b addr 
+ *
+ * ADDR is 
+ *   - if punctuate, address for punctuation, from right end of unpadded number
+ *   - if partial, start address if left aligned
+ *   - if partial, end address for right aligned, 
+ */
+typedef enum {
+    SEG7_POSSPEC_LEFTALIGN  = (1U << 6),
+    SEG7_POSSPEC_RIGHTALIGN = (0U),
+    SEG7_POSSPEC_PUNCTUATE  = (1U << 7),
+    SEG7_POSSPEC_PARTIAL    = (1U << 5),
+    SEG7_POSSPEC_FULL       = (0U),
+    SEG7_POSSPEC_ADDR_MASK  = 0x0F
+} seg7_posspec_bits;
 
 /* The segment map:
  *     A
@@ -71,8 +81,31 @@ typedef enum {
     SEG7_CLEAR  = 0b00000000,
 } seg7_symbol_t;
 
+typedef struct SEG7_CHAR_t {
+    char key;
+    uint8_t value;
+} seg7_char_t;
+
 extern const seg7_symbol_t seg7_digits[0x10];
 
-uint8_t seg7_prep_display_buffer(int16_t number, seg7_pos_spec_t pos_spec, uint8_t * buffer, uint8_t buffer_len);
+uint8_t seg7_prepbuf_number(uint8_t * buffer, uint8_t buffer_len, int16_t number, seg7_pos_spec_t pos_spec);
 
+#if SEG7_SUPPORT_ALPHABET
+extern const seg7_char_t seg7_alphabet[SEG7_ALPHABET_LEN];
+#endif
+
+#if SEG7_SUPPORT_PRINTF
+
+int seg7_vprintf(char * buffer, uint8_t buffer_len, const char *format, va_list args);
+
+static inline int seg7_printf(char * buffer, uint8_t buffer_len, const char *format, ...){
+    uint8_t rval;
+    va_list args;
+    va_start( args, format );
+    rval = seg7_vprintf(buffer, buffer_len, format, args);
+    va_end(args);       
+    return rval;
+}
+
+#endif
 #endif

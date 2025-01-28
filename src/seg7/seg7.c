@@ -1,6 +1,7 @@
 
 
 #include "seg7.h"
+#include <ctype.h>
 
 const seg7_symbol_t seg7_digits[0x10] = {
 //    XGFEDCBA
@@ -22,7 +23,15 @@ const seg7_symbol_t seg7_digits[0x10] = {
     0b01110001,  // F
 };
 
-uint8_t seg7_prep_display_buffer(int16_t number, seg7_pos_spec_t pos_spec, uint8_t * buffer, uint8_t buffer_len) {
+#if SEG7_SUPPORT_ALPHABET
+const seg7_char_t seg7_alphabet[SEG7_ALPHABET_LEN] = {
+    #if SEG7_INCLUDE_CHAR_E
+    {.key = 'e', .value = SEG7_E},
+    #endif
+};
+#endif
+
+uint8_t seg7_prepbuf_number(uint8_t * buffer, uint8_t buffer_len, int16_t number, seg7_pos_spec_t pos_spec) {
     uint8_t cursor = buffer_len;
     uint8_t i;
     bool neg = false;
@@ -86,3 +95,53 @@ uint8_t seg7_prep_display_buffer(int16_t number, seg7_pos_spec_t pos_spec, uint8
     }
     return 1;
 }
+
+static uint8_t _seg7_from_ascii(char ch) {
+    if (ch >= '0' && ch <= '9') {
+        return seg7_digits[ch - '0'];  // For digits 0-9
+    }
+
+    #if SEG7_SUPPORT_ALPHABET
+
+    ch = tolower(ch);
+    for (int i = 0; i < SEG7_ALPHABET_LEN; i++) {
+        if (seg7_alphabet[i].key == ch) {
+            return seg7_alphabet[i].value;
+        }
+    }
+    
+    #endif
+
+    if (ch == '-') {
+        return SEG7_MINUS;  
+    }
+    
+    return 0;
+}
+
+#if SEG7_SUPPORT_PRINTF
+
+uint8_t _seg7_buffer[SEG7_MAX_LEN + 2];
+
+int seg7_vprintf(char * buffer, uint8_t buffer_len, const char *format, va_list args)
+{
+    void * s7ptr = &_seg7_buffer[0];
+    uint8_t len = print( &s7ptr, PRINT_TTYPE_STRING, format, args );
+    uint8_t i = 0, j = 0;
+
+    while (i < len && j < buffer_len && _seg7_buffer[i] != 0x00) {
+        if (_seg7_buffer[i] == '.') {
+            if (j > 0) {
+                buffer[j - 1] |= 0x80;
+            }
+        } else {
+            buffer[j] = _seg7_from_ascii(_seg7_buffer[i]);
+            j++;
+        }
+        i++;
+    }
+
+    return j;
+}
+
+#endif
